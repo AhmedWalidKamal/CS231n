@@ -85,10 +85,11 @@ def svm_loss_vectorized(W, X, y, reg):
   scores = X.dot(W)
   correct_class_scores = scores[np.arange(num_train), y]
   correct_class_scores = correct_class_scores.reshape((num_train, 1))
+  scores += 1 # Adding delta = 1
   scores -= correct_class_scores # Broadcasting the column vector to perform (1)
+  scores[np.arange(num_train), y] = 0 # Disabling correct class scores from loss.
   scores = np.maximum(scores, 0)
   loss += np.sum(scores)
-
   loss /= num_train
   loss += reg * np.sum(W * W)
 
