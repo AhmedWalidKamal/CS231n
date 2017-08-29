@@ -88,7 +88,7 @@ def svm_loss_vectorized(W, X, y, reg):
   scores += 1 # Adding delta = 1
   scores -= correct_class_scores # Broadcasting the column vector to perform (1)
   scores[np.arange(num_train), y] = 0 # Disabling correct class scores from loss.
-  scores = np.maximum(scores, 0)
+  scores = np.maximum(scores, 0) # contributers in each row = num of non zero numbers.
   loss += np.sum(scores)
   loss /= num_train
   loss += reg * np.sum(W * W)
@@ -107,6 +107,17 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
+  binary_scores = scores
+  binary_scores[scores > 0] = 1 # Elements = 1 contribute to loss, 0 doens't contribute
+  row_sum = np.sum(binary_scores, axis = 1) # row vector, each element is the # of contributers to this class across all examples
+  binary_scores[np.arange(num_train), y] = -row_sum.T # Put # of contributers of each class in the coresspoding places for the y(i)s
+  dW = X.T.dot(binary_scores)
+
+  # Normalize
+  dW /= num_train
+
+  # Regularize
+  dW += 2 * reg * W
 
   #############################################################################
   #                             END OF YOUR CODE                              #
