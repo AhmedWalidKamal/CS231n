@@ -39,9 +39,15 @@ def softmax_loss_naive(W, X, y, reg):
       scores = np.exp(scores) / np.sum(np.exp(scores)) # exponentiate and normalize
       loss += -np.log(scores[y[i]])
 
+      # computing the gradient: dL/dW = (dL/df) * (df/dW) = (p[i] - (j==y[i])) * (X[i])
+      for j in range(num_classes):
+          dW[:, j] += (scores[j] - (j == y[i])) * X[i]
   # Normalize then Regularize
   loss /= num_train
   loss += np.sum(W * W)
+
+  dW /= num_train
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -72,9 +78,14 @@ def softmax_loss_vectorized(W, X, y, reg):
   scores = -np.log(scores)
   loss += np.sum(scores[np.arange(num_train), y])
 
+  # computing the gradient
+  
   # Normalize, Regularize
   loss /= num_train
   loss += np.sum(W * W)
+
+  dW /= num_train
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
