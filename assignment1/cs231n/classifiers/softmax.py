@@ -42,6 +42,7 @@ def softmax_loss_naive(W, X, y, reg):
       # computing the gradient: dL/dW = (dL/df) * (df/dW) = (p[i] - (j==y[i])) * (X[i])
       for j in range(num_classes):
           dW[:, j] += (scores[j] - (j == y[i])) * X[i]
+
   # Normalize then Regularize
   loss /= num_train
   loss += np.sum(W * W)
@@ -75,11 +76,15 @@ def softmax_loss_vectorized(W, X, y, reg):
   scores = X.dot(W)
   scores -= np.max(scores, axis = 1, keepdims = True) # Note: keepdims=True enables Broadcasting by preventing dimensions from collapsing.
   scores = np.exp(scores) / np.sum(np.exp(scores), axis = 1, keepdims = True)
+
+  # I have no idea what I'm doing, but I'm trying to calculate the vectorized grad.
+  scores[np.arange(num_train), y] -= 1
+  dW = X.T.dot(scores)
+  scores[np.arange(num_train), y] += 1 # urmmmmm revert it i guess.
+
   scores = -np.log(scores)
   loss += np.sum(scores[np.arange(num_train), y])
 
-  # computing the gradient
-  
   # Normalize, Regularize
   loss /= num_train
   loss += np.sum(W * W)
