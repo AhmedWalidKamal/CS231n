@@ -76,9 +76,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    Z = X.dot(W1) + b1 # Intermediate scores.
-    Z = np.maximum(Z, 0) # Thresholding all negative scores to zero.
-    scores = Z.dot(W2) + b2 # Final scores.
+    hidden_layer = X.dot(W1) + b1
+    hidden_layer = np.maximum(hidden_layer, 0) # Applying ReLU to hidden layer.
+    scores = hidden_layer.dot(W2) + b2 # Final scores.
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -96,13 +96,12 @@ class TwoLayerNet(object):
     # classifier loss.                                                          #
     #############################################################################
     scores -= np.max(scores, axis = 1, keepdims = True)
-    scores = np.exp(scores) / np.sum(np.exp(scores), axis = 1, keepdims = True)
-    scores = -np.log(scores)
-    loss = np.sum(scores[np.arange(N), y])
+    probabilities = np.exp(scores) / np.sum(np.exp(scores), axis = 1, keepdims = True)
+    log_probabilities = -np.log(probabilities)
+    loss = np.sum(log_probabilities[np.arange(N), y])
 
-    loss /= N
-    loss += reg * np.sum(W1 * W1) + reg * np.sum(W2 * W2)
-
+    loss /= N # Normalization.
+    loss += reg * np.sum(W1 * W1) + reg * np.sum(W2 * W2) # Regularization.
 
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -115,7 +114,26 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    dscores = probabilities
+    dscores[np.arange(N), y] -= 1
+    dscores /= N
+
+    grads['W2'] = hidden_layer.T.dot(dscores)
+    grads['b2'] = np.sum(dscores, axis=0, keepdims=True)
+
+    # TODO: Understand these 3 lines, why do we calculate them like this.
+    # next backprop into hidden layer
+    dhidden = dscores.dot(W2.T)
+    # backprop the ReLU non-linearity
+    dhidden[hidden_layer <= 0] = 0
+    # finally into W,b
+    grads['W1'] = X.T.dot(dhidden)
+    grads['b1'] = np.sum(dhidden, axis=0, keepdims=True)
+
+    # Regularization and Normalization
+    grads['W2'] += 2 * reg * W2
+    grads['W1'] += 2 * reg * W1
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
