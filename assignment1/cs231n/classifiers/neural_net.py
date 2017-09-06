@@ -119,7 +119,7 @@ class TwoLayerNet(object):
     dscores /= N
 
     grads['W2'] = hidden_layer.T.dot(dscores)
-    grads['b2'] = np.sum(dscores, axis=0, keepdims=True)
+    grads['b2'] = np.sum(dscores, axis=0)
 
     # TODO: Understand these 3 lines, why do we calculate them like this.
     # next backprop into hidden layer
@@ -128,7 +128,7 @@ class TwoLayerNet(object):
     dhidden[hidden_layer <= 0] = 0
     # finally into W,b
     grads['W1'] = X.T.dot(dhidden)
-    grads['b1'] = np.sum(dhidden, axis=0, keepdims=True)
+    grads['b1'] = np.sum(dhidden, axis=0)
 
     # Regularization and Normalization
     grads['W2'] += 2 * reg * W2
@@ -177,7 +177,9 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      indices = np.random.choice(np.arange(num_train), batch_size)
+      X_batch = X[indices]
+      y_batch = y[indices]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -192,7 +194,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] += -learning_rate * grads['W1']
+      self.params['W2'] += -learning_rate * grads['W2']
+      self.params['b1'] += -learning_rate * grads['b1']
+      self.params['b2'] += -learning_rate * grads['b2']
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -237,7 +242,15 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    # To predict labels, just perform forward propagation and find max score
+    # for each example.
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+
+    hidden_layer = X.dot(W1) + b1
+    hidden_layer = np.maximum(hidden_layer, 0) # Applying ReLU to hidden layer.
+    scores = hidden_layer.dot(W2) + b2 # Final scores.
+    y_pred = np.argmax(scores, axis = 1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
